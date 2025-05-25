@@ -27,14 +27,14 @@ int main() { return (int)FcInit(); }
 '''
 
 CPP_64BIT_CHECK='''
-#define TEST(a) (sizeof(void*) == a ? 1 : -1) 
+#define TEST(a) (sizeof(void*) == a ? 1 : -1)
 int g_Test[TEST(8)];
 
 int main () { return 0; }
 '''
 
 CPP_32BIT_CHECK='''
-#define TEST(a) (sizeof(void*) == a ? 1 : -1) 
+#define TEST(a) (sizeof(void*) == a ? 1 : -1)
 int g_Test[TEST(4)];
 
 int main () { return 0; }
@@ -236,7 +236,7 @@ def define_platform(conf):
 			'NO_HOOK_MALLOC',
 			'_DLL_EXT=.so'
 		])
-		
+
 	elif conf.env.DEST_OS == 'win32':
 		conf.env.append_unique('DEFINES', [
 			'WIN32=1', '_WIN32=1',

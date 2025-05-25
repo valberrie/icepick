@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -137,10 +137,28 @@ CUtlBlockMemory<T,I>::~CUtlBlockMemory()
 template< class T, class I >
 void CUtlBlockMemory<T,I>::Swap( CUtlBlockMemory< T, I > &mem )
 {
-	this->swap( m_pMemory, mem.m_pMemory );
-	this->swap( m_nBlocks, mem.m_nBlocks );
-	this->swap( m_nIndexMask, mem.m_nIndexMask );
-	this->swap( m_nIndexShift, mem.m_nIndexShift );
+    // valb - not a member??
+	// this->swap( m_pMemory, mem.m_pMemory );
+	// this->swap( m_nBlocks, mem.m_nBlocks );
+	// this->swap( m_nIndexMask, mem.m_nIndexMask );
+	// this->swap( m_nIndexShift, mem.m_nIndexShift );
+
+    // let's see if this breaks everything!
+    auto mem_tmp = m_pMemory;
+    m_pMemory = mem.m_pMemory;
+    mem.m_pMemory = mem_tmp;
+
+    auto blk_tmp = m_nBlocks;
+    m_nBlocks = mem.m_nBlocks;
+    mem.m_nBlocks = mem_tmp;
+
+    auto im_tmp = m_nIndexMask;
+    m_nIndexMask = mem.m_nIndexMask;
+    mem.m_nIndexMask = mem_tmp;
+
+    auto is_tmp = m_nIndexShift;
+    m_nIndexShift = mem.m_nIndexShift;
+    mem.m_nIndexShift = mem_tmp;
 }
 
 

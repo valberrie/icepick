@@ -159,7 +159,7 @@
 	#else
 		#define IsLinux() false
 	#endif
-	
+
 	#if defined( OSX )
 		#define IsOSX() true
 	#else
@@ -420,7 +420,7 @@ typedef void * HINSTANCE;
 
 #endif // defined(_WIN32) && !defined(WINDED)
 
-#define MAX_FILEPATH 512 
+#define MAX_FILEPATH 512
 
 // Defines MAX_PATH
 #ifndef MAX_PATH
@@ -504,7 +504,7 @@ typedef void * HINSTANCE;
 #ifdef _WIN32
         #define DECL_ALIGN(x) __declspec(align(x))
 
-#elif GNUC
+#elif defined GNUC
 	#define DECL_ALIGN(x) __attribute__((aligned(x)))
 #else
         #define DECL_ALIGN(x) /* */
@@ -526,7 +526,7 @@ typedef void * HINSTANCE;
 #elif defined( GNUC )
 // gnuc has the align decoration at the end
 #define ALIGN4
-#define ALIGN8 
+#define ALIGN8
 #define ALIGN16
 #define ALIGN32
 #define ALIGN128
@@ -674,7 +674,7 @@ typedef void * HINSTANCE;
 	#define  STDCALL				__stdcall
 	#ifdef FORCEINLINE
 		#undef FORCEINLINE
-#endif 
+#endif
 	#define  FORCEINLINE			__forceinline
 	#define  FORCEINLINE_TEMPLATE		__forceinline
 	#else
@@ -982,7 +982,7 @@ template <typename T>
 inline T QWordSwapC( T dw )
 {
 	// Assert sizes passed to this are already correct, otherwise
-	// the cast to uint64 * below is unsafe and may have wrong results 
+	// the cast to uint64 * below is unsafe and may have wrong results
 	// or even crash.
 	PLAT_COMPILE_TIME_ASSERT( sizeof( dw ) == sizeof(uint64) );
 
@@ -1202,7 +1202,7 @@ FORCEINLINE void StoreLittleDWord( uint32 *base, unsigned int dwordIndex, uint32
 //
 // It should not be changed after startup unless you really know what you're doing. The only place
 // that should do this is the benchmark code itself so it can output a legit duration.
-PLATFORM_INTERFACE void				Plat_SetBenchmarkMode( bool bBenchmarkMode );	
+PLATFORM_INTERFACE void				Plat_SetBenchmarkMode( bool bBenchmarkMode );
 PLATFORM_INTERFACE bool				Plat_IsInBenchmarkMode();
 
 
@@ -1326,7 +1326,7 @@ struct MemoryInformation
 
 	uint m_nPhysicalRamMbTotal;
 	uint m_nPhysicalRamMbAvailable;
-	
+
 	uint m_nVirtualRamMbTotal;
 	uint m_nVirtualRamMbAvailable;
 
