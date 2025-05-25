@@ -3,11 +3,13 @@
 - make build code generic
 - build a `vstdlib.so` from zig
 - pass correct cflags/ldflags/defines into the build (mostly)
+- `filesystem_stdio`, `tier1`, `tier2`, `vpklib`
 
 - - -
 
 ### todo!
-- build `tier1.a`
+- `particles`, `dmxloader`, `matsys_controls`, `tier3`, `mathlib`, `choreobjects`, `steam_api`, `bitmap`
+- work our way up to a game project
 - work our way up to `engine.so`
 
 - - -

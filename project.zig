@@ -47,6 +47,9 @@ pub const Os = union(enum) {
             },
         };
     }
+
+    // TODO: more
+    pub const DARWIN = Os{ .posix = .{ .bsd = .{ .darwin = @as(void, undefined) } } };
 };
 
 pub const Arch = union(enum) {
@@ -116,6 +119,7 @@ pub const Api = union(enum) {
         };
     }
 
+    // TODO
     // pub fn from(from: Config) Api {
 
     // }
@@ -127,8 +131,7 @@ pub const Spec = struct {
     mode: ?Mode = null,
     api: ?Api = null,
 
-    pub fn from(t: std.Build.ResolvedTarget, o: std.builtin.OptimizeMode, c: Config) Spec {
-        _ = c;
+    pub fn from(t: std.Build.ResolvedTarget, o: std.builtin.OptimizeMode) Spec {
         return Spec{
             .os = Os.from(t.result.os.tag),
             .arch = Arch.from(t.result.cpu.arch),
@@ -150,8 +153,8 @@ pub const PlatformSrc = struct { data: []const []const u8, spec: ?Spec = null };
 pub const PlatformLink = struct { data: []const []const u8, spec: ?Spec = null };
 pub const PlatformCflags = struct { data: []const []const u8, spec: ?Spec = null };
 pub const PlatformMacros = struct { data: []const Macro, spec: ?Spec = null };
-pub const PlatformIncludePaths = struct { data: []const Path, spec: ?Spec = null };
-pub const PlatformLinkPaths = struct { data: []const Path, spec: ?Spec = null };
+pub const PlatformIncludePaths = struct { data: []const []const u8, spec: ?Spec = null };
+pub const PlatformLinkPaths = struct { data: []const []const u8, spec: ?Spec = null };
 
 pub const Config = struct {
     use_sdl: bool,
@@ -165,22 +168,53 @@ pub const ModType = enum {
     exe,
 };
 
-pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin.OptimizeMode, name_: []const u8, cfg_: Config, modtype_: ModType, mod_root_: ?Path, src_cpp_: []const PlatformSrc, cpp_flags_: ?[]const PlatformCflags, src_assembly_: ?[]const PlatformSrc, links_: ?[]const PlatformLink, macros_: ?[]const PlatformMacros, incpaths_: ?[]const PlatformIncludePaths, linkpaths_: ?[]const PlatformLinkPaths) *std.Build.Step.Compile {
+pub const ModCommon = struct {
+    b: *std.Build,
+    t: std.Build.ResolvedTarget,
+    o: std.builtin.OptimizeMode,
+    cfg: struct {
+        use_sdl: bool,
+        use_gl: bool,
+        use_togles: bool,
+    },
+};
+
+pub const ModInfo = struct {
+    name: []const u8,
+    kind: ModType,
+    root: ?Path = null,
+    src_cpp: []const PlatformSrc,
+    src_asm: ?[]const PlatformSrc = null,
+    flags: ?[]const PlatformCflags = null,
+    links: ?[]const PlatformLink = null,
+    macros: ?[]const PlatformMacros = null,
+    include_paths: ?[]const PlatformIncludePaths = null,
+    link_paths: ?[]const PlatformLinkPaths = null,
+    depends_on: ?[]const *std.Build.Step.Compile = null,
+};
+
+pub fn make_module(common: ModCommon, info: ModInfo) *std.Build.Step.Compile {
+    const b = common.b;
+    const t = common.t;
+    const o = common.o;
+    // const cfg = common.cfg;
+
     const IPATH = [_]PlatformIncludePaths{
-        PlatformIncludePaths{ .data = &[_]Path{
-            b_.path("."),
-            b_.path("../thirdparty"),
-            b_.path("../"),
-            b_.path("../public"),
-            b_.path("../public/tier0"),
-            b_.path("../public/tier1"),
+        PlatformIncludePaths{ .data = &[_][]const u8{
+            ".",
+            "../thirdparty",
+            "../",
+            "../public",
+            "../public/tier0",
+            "../public/tier1",
+            "../common",
         } },
-        PlatformIncludePaths{ .data = &[_]Path{b_.path("../thirdparty/SDL")}, .spec = .{ .api = .{ .sdl = @as(void, undefined) } } },
+        PlatformIncludePaths{ .data = &[_][]const u8{"../thirdparty/SDL"}, .spec = .{ .api = .{ .sdl = @as(void, undefined) } } },
     };
 
     const LPATH = [_]PlatformLinkPaths{
         PlatformLinkPaths{
-            .data = &[_]Path{b_.path("../thirdparty")},
+            .data = &[_][]const u8{"../thirdparty"},
         },
     };
 
@@ -201,6 +235,7 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
         "shlwapi",
         "imm32",
     }, .spec = .{ .os = .{ .windows = @as(void, undefined) } } } };
+    // TODO: darwin links
 
     const MACROS = [_]PlatformMacros{
         PlatformMacros{ .data = &[_]Macro{
@@ -228,7 +263,7 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
                 Macro{ .name = "GNUC", .val = "1" },
                 Macro{ .name = "NO_MEMOVERRIDE_NEW_DELETE", .val = "1" },
                 // for darwin
-                Macro{ .name = "_DLL_EXT", .val = t_.result.os.tag.dynamicLibSuffix() },
+                Macro{ .name = "_DLL_EXT", .val = t.result.os.tag.dynamicLibSuffix() },
             },
             .spec = .{
                 .os = .{ .posix = null },
@@ -255,34 +290,37 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
         }, .spec = .{
             .os = .{ .posix = .{ .bsd = .{ .darwin = @as(void, undefined) } } },
         } },
-        PlatformMacros{ .data = &[_]Macro{
-            Macro{ .name = "WIN32", .val = "1" },
-            Macro{ .name = "_WIN32", .val = "1" },
-            Macro{
-                .name = "_WINDOWS",
+        PlatformMacros{
+            .data = &[_]Macro{
+                Macro{ .name = "WIN32", .val = "1" },
+                Macro{ .name = "_WIN32", .val = "1" },
+                Macro{
+                    .name = "_WINDOWS",
+                },
+                Macro{
+                    .name = "_CRT_SECURE_NO_DEPRECATE",
+                },
+                Macro{
+                    .name = "_CRT_NONSTDC_NO_DEPRECATE",
+                },
+                Macro{
+                    .name = "_ALLOW_RUNTIME_LIBRARY_MISMATCH",
+                },
+                Macro{
+                    .name = "_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH",
+                },
+                Macro{
+                    .name = "_ALLOW_MSC_VER_MISMATCH",
+                },
+                Macro{
+                    .name = "NO_X360_XDK",
+                },
+                Macro{ .name = "_DLL_EXT", .val = ".dll" },
             },
-            Macro{
-                .name = "_CRT_SECURE_NO_DEPRECATE",
+            .spec = .{
+                .os = .{ .windows = @as(void, undefined) },
             },
-            Macro{
-                .name = "_CRT_NONSTDC_NO_DEPRECATE",
-            },
-            Macro{
-                .name = "_ALLOW_RUNTIME_LIBRARY_MISMATCH",
-            },
-            Macro{
-                .name = "_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH",
-            },
-            Macro{
-                .name = "_ALLOW_MSC_VER_MISMATCH",
-            },
-            Macro{
-                .name = "NO_X360_XDK",
-            },
-            Macro{ .name = "_DLL_EXT", .val = ".dll" },
-        }, .spec = .{
-            .os = .{ .windows = @as(void, undefined) },
-        } },
+        },
         PlatformMacros{ .data = &[_]Macro{
             Macro{ .name = "PLATFORM_64BITS", .val = "1" },
         }, .spec = .{
@@ -338,15 +376,15 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
         } },
     };
 
-    const root = if (mod_root_) |r| r else b_.path(".");
+    const root = if (info.root) |r| r else b.path(".");
 
-    var cxxsrc = std.ArrayList([]const u8).init(b_.allocator);
-    var asmsrc = std.ArrayList([]const u8).init(b_.allocator);
-    var cflags = std.ArrayList([]const u8).init(b_.allocator);
-    var macros = std.ArrayList(Macro).init(b_.allocator);
-    var links = std.ArrayList([]const u8).init(b_.allocator);
-    var ipaths = std.ArrayList(Path).init(b_.allocator);
-    var lpaths = std.ArrayList(Path).init(b_.allocator);
+    var cxxsrc = std.ArrayList([]const u8).init(b.allocator);
+    var asmsrc = std.ArrayList([]const u8).init(b.allocator);
+    var cflags = std.ArrayList([]const u8).init(b.allocator);
+    var macros = std.ArrayList(Macro).init(b.allocator);
+    var links = std.ArrayList([]const u8).init(b.allocator);
+    var ipaths = std.ArrayList([]const u8).init(b.allocator);
+    var lpaths = std.ArrayList([]const u8).init(b.allocator);
 
     defer {
         macros.deinit();
@@ -358,7 +396,7 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
         ipaths.deinit();
     }
 
-    const spec = Spec.from(t_, o_, cfg_);
+    const spec = Spec.from(t, o);
 
     const fns = struct {
         pub fn walk(sp: Spec, T: type, I: type, list: []const T, arr: *std.ArrayList(I)) void {
@@ -371,54 +409,54 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
     };
 
     // defaults
-    fns.walk(spec, PlatformIncludePaths, Path, &IPATH, &ipaths);
-    fns.walk(spec, PlatformLinkPaths, Path, &LPATH, &lpaths);
+    fns.walk(spec, PlatformIncludePaths, []const u8, &IPATH, &ipaths);
+    fns.walk(spec, PlatformLinkPaths, []const u8, &LPATH, &lpaths);
     fns.walk(spec, PlatformLink, []const u8, &LINK, &links);
     fns.walk(spec, PlatformMacros, Macro, &MACROS, &macros);
     fns.walk(spec, PlatformCflags, []const u8, &FLAGS, &cflags);
 
     // for this module
-    if (incpaths_) |ip| {
-        fns.walk(spec, PlatformIncludePaths, Path, ip, &ipaths);
+    if (info.include_paths) |ip| {
+        fns.walk(spec, PlatformIncludePaths, []const u8, ip, &ipaths);
     }
-    if (linkpaths_) |lp| {
-        fns.walk(spec, PlatformLinkPaths, Path, lp, &lpaths);
+    if (info.link_paths) |lp| {
+        fns.walk(spec, PlatformLinkPaths, []const u8, lp, &lpaths);
     }
-    if (links_) |l| {
+    if (info.links) |l| {
         fns.walk(spec, PlatformLink, []const u8, l, &links);
     }
-    if (macros_) |m| {
+    if (info.macros) |m| {
         fns.walk(spec, PlatformMacros, Macro, m, &macros);
     }
-    if (cpp_flags_) |f| {
+    if (info.flags) |f| {
         fns.walk(spec, PlatformCflags, []const u8, f, &cflags);
     }
-    if (src_assembly_) |a| {
+    if (info.src_asm) |a| {
         fns.walk(spec, PlatformSrc, []const u8, a, &asmsrc);
     }
-    fns.walk(spec, PlatformSrc, []const u8, src_cpp_, &cxxsrc);
+    fns.walk(spec, PlatformSrc, []const u8, info.src_cpp, &cxxsrc);
 
-    const mod = b_.addModule(name_, .{
-        .target = t_,
-        .optimize = o_,
+    const mod = b.addModule(info.name, .{
+        .target = t,
+        .optimize = o,
         .link_libcpp = true,
         .link_libc = true,
     });
 
-    const compile = switch (modtype_) {
-        .static => b_.addLibrary(.{
-            .name = name_,
+    const compile = switch (info.kind) {
+        .static => b.addLibrary(.{
+            .name = info.name,
             .root_module = mod,
             .linkage = .static,
         }),
-        .shared => b_.addLibrary(.{
-            .name = name_,
+        .shared => b.addLibrary(.{
+            .name = info.name,
             .root_module = mod,
             .linkage = .dynamic,
         }),
-        .exe => b_.addExecutable(.{
+        .exe => b.addExecutable(.{
             .root_module = mod,
-            .name = name_,
+            .name = info.name,
             .link_libc = true,
         }),
     };
@@ -430,11 +468,11 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
     }
 
     for (ipaths.items) |i| {
-        mod.addIncludePath(root.join(b_.allocator, i.src_path.sub_path) catch unreachable);
+        mod.addIncludePath(root.join(b.allocator, i) catch unreachable);
     }
 
     for (lpaths.items) |lp| {
-        mod.addLibraryPath(root.join(b_.allocator, lp.src_path.sub_path) catch unreachable);
+        mod.addLibraryPath(root.join(b.allocator, lp) catch unreachable);
     }
 
     for (links.items) |l| {
@@ -449,6 +487,12 @@ pub fn make_module(b_: *std.Build, t_: std.Build.ResolvedTarget, o_: std.builtin
     });
 
     mod.addCSourceFiles(.{ .files = asmsrc.items, .root = root, .language = .assembly });
+
+    if (info.depends_on) |deps| {
+        for (deps) |d| {
+            mod.linkLibrary(d);
+        }
+    }
 
     return compile;
 }
