@@ -120,6 +120,9 @@ void CAvatarImage::LoadAvatarImage()
 #ifdef CSS_PERF_TEST
 	return;
 #endif
+
+	// valb - TODO
+#ifndef NO_STEAM
 	// attempt to retrieve the avatar image from Steam
 	if ( m_bLoadPending && steamapicontext->SteamFriends() && steamapicontext->SteamUtils() && gpGlobals->curtime >= m_fNextLoadTime )
 	{
@@ -167,6 +170,7 @@ void CAvatarImage::LoadAvatarImage()
 			m_fNextLoadTime = gpGlobals->curtime + 1.0f;
 		}
 	}
+#endif
 }
 
 
@@ -175,11 +179,14 @@ void CAvatarImage::LoadAvatarImage()
 //-----------------------------------------------------------------------------
 void CAvatarImage::UpdateFriendStatus( void )
 {
+	// valb - TODO
+#ifndef NO_STEAM
 	if ( !m_SteamID.IsValid() )
 		return;
-
 	if ( steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
 		m_bFriend = steamapicontext->SteamFriends()->HasFriend( m_SteamID, k_EFriendFlagImmediate );
+#endif
+
 }
 
 //-----------------------------------------------------------------------------
@@ -337,6 +344,8 @@ void CAvatarImagePanel::SetPlayer( C_BasePlayer *pPlayer, EAvatarSize avatarSize
 //-----------------------------------------------------------------------------
 void CAvatarImagePanel::SetPlayer( int entindex, EAvatarSize avatarSize )
 {
+	// valb - TODO
+#ifndef NO_STEAM
 	m_pImage->ClearAvatarSteamID();
 
 	player_info_t pi;
@@ -352,6 +361,7 @@ void CAvatarImagePanel::SetPlayer( int entindex, EAvatarSize avatarSize )
 			m_pImage->ClearAvatarSteamID();
 		}
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

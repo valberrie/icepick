@@ -40,3 +40,7 @@ source-engine.sln
 
 zig-out
 .zig-cache
+icepick_out
+cmake
+.vscode
+.github

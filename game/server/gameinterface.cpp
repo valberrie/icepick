@@ -137,7 +137,7 @@ extern ConVar commentary;
 #ifndef NO_STEAM
 // this context is not available on dedicated servers
 // WARNING! always check if interfaces are available before using
-static CSteamAPIContext s_SteamAPIContext;	
+static CSteamAPIContext s_SteamAPIContext;
 CSteamAPIContext *steamapicontext = &s_SteamAPIContext;
 
 // this context is not available on a pure client connected to a remote server.
@@ -578,8 +578,10 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 
 #ifndef _X360
+#ifndef NO_STEAM
 	s_SteamAPIContext.Init();
 	s_SteamGameServerAPIContext.Init();
+#endif
 #endif
 
 	// init each (seperated for ease of debugging)
@@ -792,8 +794,10 @@ void CServerGameDLL::DLLShutdown( void )
 #endif
 
 #ifndef _X360
+#ifndef NO_STEAM
 	s_SteamAPIContext.Clear(); // Steam API context shutdown
 	s_SteamGameServerAPIContext.Clear();
+#endif
 #endif	
 
 	gameeventmanager = NULL;

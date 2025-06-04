@@ -46,6 +46,8 @@
 
 #define TOUCH_FINGER_MAX_COUNT 10
 
+// valb - TODO: steam controller will be broken with NO_STEAM
+
 //-----------------------------------------------------------------------------
 // Implementation of the input system
 //-----------------------------------------------------------------------------
@@ -476,12 +478,16 @@ public:
 	bool m_bConsoleTextMode;
 
 public:
+#ifndef NO_STEAM
 	// Steam API context for use by input system for access to steam controllers.
 	CSteamAPIContext& SteamAPIContext() { return m_SteamAPIContext; }
+#endif
 
 private:
-	CSteamAPIContext m_SteamAPIContext;
 	bool m_bSkipControllerInitialization;
+#ifndef NO_STEAM
+	CSteamAPIContext m_SteamAPIContext;
+#endif
 };
 
 #endif // INPUTSYSTEM_H

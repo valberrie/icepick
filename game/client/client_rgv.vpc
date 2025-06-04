@@ -1,0 +1,26 @@
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"rgv" [!$SOURCESDK]
+$Macro GAMENAME 	"mod_rgv" [$SOURCESDK]
+
+$Include "$SRCDIR\game\client\client_base.vpc"
+$Include "$SRCDIR\game\client\client_episodic.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	".\rgv;$SRCDIR\game\shared\rgv;$BASE"
+		$PreprocessorDefinitions		"$BASE;RGV_CLIENT_DLL"
+	}
+}
+
+$Project "Client (RGV)"
+{
+	$Folder	"Source Files"
+	{
+		$Folder	"RGV DLL"
+		{
+
+		}
+	}
+}

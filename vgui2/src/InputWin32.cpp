@@ -1271,6 +1271,7 @@ bool CInputSystem::WasKeyReleased( KeyCode code )
 //-----------------------------------------------------------------------------
 void CInputSystem::UpdateCursorPosInternal( int x, int y )
 {
+
 	// Windows sends a CursorMoved message even when you haven't actually
 	// moved the cursor, this means we are going into this fxn just by clicking
 	// in the window. We only want to execute this code if we have actually moved

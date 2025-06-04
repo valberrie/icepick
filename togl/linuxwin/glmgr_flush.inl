@@ -196,8 +196,9 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 				}
 			}
 
+			// valb - HACK: errors with "class has no member" ???
             gGL->glUseProgramObjectARB(pNewPair->m_program);
-			//gGL->glUseProgram( (GLuint)pNewPair->m_program );
+			// gGL->glUseProgram( (GLuint)pNewPair->m_program );
 			
 			GL_BATCH_PERF( m_FlushStats.m_nTotalProgramPairChanges++; )
 

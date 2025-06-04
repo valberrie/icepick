@@ -23,6 +23,8 @@ static void initKeymap(void);
 #endif
 ConVar joy_xcontroller_found( "joy_xcontroller_found", "1", FCVAR_HIDDEN, "Automatically set to 1 if an xcontroller has been detected." );
 
+// valb - TODO: steam controller will be broken with NO_STEAM
+
 //-----------------------------------------------------------------------------
 // Singleton instance
 //-----------------------------------------------------------------------------
@@ -146,6 +148,7 @@ InitReturnVal_t CInputSystem::Init()
 		return INIT_FAILED;
 #endif
 
+#ifndef NO_STEAM
 	// Initialize the input system copy of the steam API context, for use by controller stuff (don't do this if we're a dedicated server).
 	if ( !m_bSkipControllerInitialization && SteamAPI_InitSafe() )
 	{
@@ -161,6 +164,7 @@ InitReturnVal_t CInputSystem::Init()
 			}
 		}
 	}
+#endif
 
 	ButtonCode_InitKeyTranslationTable();
 	ButtonCode_UpdateScanCodeLayout();
@@ -1543,6 +1547,7 @@ void CInputSystem::SetConsoleTextMode( bool bConsoleTextMode )
 
 ISteamController* CInputSystem::SteamControllerInterface()
 {
+#ifndef NO_STEAM
 	if ( m_bSkipControllerInitialization )
 	{
 		return nullptr;
@@ -1551,6 +1556,9 @@ ISteamController* CInputSystem::SteamControllerInterface()
 	{
 		return m_SteamAPIContext.SteamController();
 	}
+#else
+	return nullptr;
+#endif
 }
 
 void CInputSystem::StartTextInput()
